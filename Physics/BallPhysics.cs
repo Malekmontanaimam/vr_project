@@ -11,10 +11,19 @@ public class BallPhysics
     public float baseDamping = 0.98f;
     public float velocityDamping = 0.95f;
 
+    
+    public Vector3 windForce = Vector3.zero;
+    public Vector3 angularVelocity = Vector3.zero;
+    public float momentOfInertia = 1f;
+    public List<Vector3> externalForces = new List<Vector3>();
+    public float airDensity = 1.225f; // كثافة الهواء
+    public float dragCoefficient = 0.47f; // معامل السحب للكرة
+
     public BallPhysics(List<BallPoint> pts, float mass)
     {
         points = pts;
         totalMass = mass;
+        momentOfInertia = (2f/5f) * mass * Mathf.Pow(0.5f, 2); // لحظة القصور الذاتي للكرة
     }
 
     public void UpdatePhysics(float deltaTime, List<Spring> springs)
@@ -29,11 +38,19 @@ public class BallPhysics
             // إضافة الجاذبية
             p.force += gravity * p.mass;
             
-            // إضافة مقاومة الهواء
+            // إضافة قوة الرياح
+            p.force += windForce * p.mass;
+
+            // إضافة القوى الخارجية
+            foreach (var force in externalForces)
+                p.force += force * p.mass;
+
+            // تحسين مقاومة الهواء باستخدام معادلة السحب
             if (p.velocity.magnitude > 0.1f)
             {
-                Vector3 airResistanceForce = -p.velocity.normalized * 
-                    p.velocity.sqrMagnitude * airResistance;
+                float crossSectionalArea = Mathf.PI * Mathf.Pow(0.5f, 2); // مساحة المقطع العرضي للكرة
+                float dragForce = 0.5f * airDensity * p.velocity.sqrMagnitude * dragCoefficient * crossSectionalArea;
+                Vector3 airResistanceForce = -p.velocity.normalized * dragForce;
                 p.force += airResistanceForce;
             }
 
@@ -50,6 +67,11 @@ public class BallPhysics
             
             // تحديث الموقع
             p.position += p.velocity * deltaTime;
+
+            // تطبيق الدوران
+            Vector3 rotationForce = Vector3.Cross(p.position - Vector3.zero, p.velocity);
+            angularVelocity += rotationForce * deltaTime / momentOfInertia;
+            angularVelocity *= 0.98f; // تخميد الدوران
             
             // حماية من NaN و Infinity
             if (float.IsNaN(p.position.x) || float.IsNaN(p.position.y) || float.IsNaN(p.position.z) ||
@@ -64,6 +86,24 @@ public class BallPhysics
             // تصفير القوة بعد التحديث
             p.force = Vector3.zero;
         }
+    }
+
+    // إضافة قوة خارجية
+    public void AddExternalForce(Vector3 force)
+    {
+        externalForces.Add(force);
+    }
+
+    // إزالة قوة خارجية
+    public void RemoveExternalForce(Vector3 force)
+    {
+        externalForces.Remove(force);
+    }
+
+    // تحديث قوة الرياح
+    public void UpdateWindForce(Vector3 newWindForce)
+    {
+        windForce = newWindForce;
     }
 }
 }

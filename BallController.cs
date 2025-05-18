@@ -8,6 +8,13 @@ public class BallController : MonoBehaviour
     public int pointsCount = 20;
 
     public Ball myBall;
+    
+    
+    public Vector3 windDirection = Vector3.right;
+    public float windStrength = 0f;
+    public float maxWindStrength = 10f;
+    public bool showDebugInfo = true;
+    public bool isDragging = false;
 
     void Start()
     {
@@ -16,6 +23,11 @@ public class BallController : MonoBehaviour
 
     void Update()
     {
+        if (isDragging) return;
+        // تحديث قوة الرياح
+        Vector3 windForce = windDirection.normalized * windStrength;
+        myBall.physics.UpdateWindForce(windForce);
+
         // تحديث فيزياء النقاط والنوابض
         myBall.physics.UpdatePhysics(Time.deltaTime, myBall.springs);
 
@@ -43,7 +55,30 @@ public class BallController : MonoBehaviour
         myBall.center = newCenter;
         transform.position = newCenter;
 
+        // تطبيق الدوران على الكرة
+        transform.Rotate(myBall.physics.angularVelocity * Time.deltaTime);
+
         // رسم النقاط والنوابض
         myBall.DrawDebugPoints();
+
+        // عرض معلومات التصحيح
+        if (showDebugInfo)
+        {
+            Debug.Log($"Wind Force: {windForce.magnitude:F2} N");
+            Debug.Log($"Angular Velocity: {myBall.physics.angularVelocity.magnitude:F2} rad/s");
+            Debug.Log($"Linear Velocity: {myBall.GetAverageVelocity().magnitude:F2} m/s");
+        }
+    }
+
+    // إضافة قوة خارجية (يمكن استدعاؤها من أي مكان)
+    public void ApplyForce(Vector3 force)
+    {
+        myBall.physics.AddExternalForce(force);
+    }
+
+    // إزالة قوة خارجية
+    public void RemoveForce(Vector3 force)
+    {
+        myBall.physics.RemoveExternalForce(force);
     }
 }

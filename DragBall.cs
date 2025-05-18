@@ -1,15 +1,19 @@
 using UnityEngine;
+using Physics;
 
 public class DragBall : MonoBehaviour
 {
     private Vector3 offset;
     private float zCoord;
     private bool isDragging = false;
-    private Rigidbody rb;
+    private BallController ballController;
+    private Vector3 dragVelocity = Vector3.zero;
+    private Vector3 lastPosition;
 
     void Start()
     {
-        rb = GetComponent<Rigidbody>();
+        ballController = GetComponent<BallController>();
+        lastPosition = transform.position;
     }
 
     void OnMouseDown()
@@ -18,21 +22,39 @@ public class DragBall : MonoBehaviour
         zCoord = Camera.main.WorldToScreenPoint(transform.position).z;
         offset = transform.position - GetMouseWorldPos();
         isDragging = true;
-        if (rb != null)
-            rb.isKinematic = true;
+        lastPosition = transform.position;
     }
 
     void OnMouseDrag()
     {
-        if (isDragging)
-            transform.position = GetMouseWorldPos() + offset;
+        if (isDragging && ballController != null)
+        {
+            Vector3 newPosition = GetMouseWorldPos() + offset;
+            transform.position = newPosition;
+            
+            // حساب السرعة بناءً على حركة الماوس
+            dragVelocity = (newPosition - lastPosition) / Time.deltaTime;
+            lastPosition = newPosition;
+
+            // تطبيق قوة سحب على الكرة
+            Vector3 dragForce = dragVelocity * ballController.mass;
+            ballController.ApplyForce(dragForce);
+        }
     }
 
     void OnMouseUp()
     {
-        isDragging = false;
-        if (rb != null)
-            rb.isKinematic = false;
+        if (isDragging && ballController != null)
+        {
+            isDragging = false;
+            
+            // تطبيق قوة نهائية عند إطلاق الكرة
+            Vector3 releaseForce = dragVelocity * ballController.mass;
+            ballController.ApplyForce(releaseForce);
+            
+            // إعادة تعيين السرعة
+            dragVelocity = Vector3.zero;
+        }
     }
 
     Vector3 GetMouseWorldPos()
