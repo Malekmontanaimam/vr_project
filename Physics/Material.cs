@@ -15,9 +15,10 @@ namespace Physics {
         public float elasticity;   // معامل المرونة
         public float friction;     // معامل الاحتكاك
         public float hardness;     // الصلابة
+        public float deformability; // قابلية التشوه (جديد)
         public Color color;        // لون المادة
 
-        // قيم افتراضية للمواد الشائعة
+    
         public static Material Metal {
             get {
                 return new Material {
@@ -27,6 +28,7 @@ namespace Physics {
                     elasticity = 0.3f,
                     friction = 0.2f,
                     hardness = 0.8f,
+                    deformability = 0.1f,
                     color = new Color(0.7f, 0.7f, 0.7f)
                 };
             }
@@ -41,6 +43,7 @@ namespace Physics {
                     elasticity = 0.5f,
                     friction = 0.4f,
                     hardness = 0.3f,
+                    deformability = 0.5f,
                     color = new Color(0.6f, 0.4f, 0.2f)
                 };
             }
@@ -55,6 +58,7 @@ namespace Physics {
                     elasticity = 0.7f,
                     friction = 0.3f,
                     hardness = 0.4f,
+                    deformability = 0.6f,
                     color = new Color(0.2f, 0.2f, 0.2f)
                 };
             }
@@ -69,6 +73,7 @@ namespace Physics {
                     elasticity = 0.9f,
                     friction = 0.8f,
                     hardness = 0.2f,
+                    deformability = 0.8f,
                     color = new Color(0.1f, 0.1f, 0.1f)
                 };
             }
